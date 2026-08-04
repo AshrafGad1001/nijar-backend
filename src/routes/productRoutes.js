@@ -1,48 +1,48 @@
 const express = require('express');
-const { menuItemValidator } = require('../middlewares/validators');
+const { productValidator } = require('../middlewares/validators');
 const router = express.Router();
 const { protect } = require('../middlewares/auth');
 const { adminLimiter } = require('../middlewares/rateLimiter');
 const { upload, checkMagicBytes } = require('../middlewares/upload');
 const {
-  getMenuItems,
-  createMenuItem,
-  updateMenuItem,
-  deleteMenuItem,
-  reorderMenuItems,
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  reorderProducts,
   getBestSellers,
   getHeroSlides,
-} = require('../controllers/menuItemController');
+} = require('../controllers/productController');
 
 // All routes are protected & rate-limited
 router.use(protect);
 router.use(adminLimiter);
 
 router.route('/')
-  .get(getMenuItems)
+  .get(getProducts)
   .post(
     upload.fields([{ name: 'image', maxCount: 1 }, { name: 'gallery', maxCount: 10 }]),
     checkMagicBytes,
-    menuItemValidator,
-    createMenuItem
+    productValidator,
+    createProduct
   );
 
-router.route('/best-sellers')
+router.route('/featured-works')
   .get(getBestSellers);
 
 router.route('/hero-slides')
   .get(getHeroSlides);
 
 router.route('/reorder')
-  .put(reorderMenuItems);
+  .put(reorderProducts);
 
 router.route('/:id')
   .put(
     upload.fields([{ name: 'image', maxCount: 1 }, { name: 'gallery', maxCount: 10 }]),
     checkMagicBytes,
-    menuItemValidator,
-    updateMenuItem
+    productValidator,
+    updateProduct
   )
-  .delete(deleteMenuItem);
+  .delete(deleteProduct);
 
 module.exports = router;

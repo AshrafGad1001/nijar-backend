@@ -1,5 +1,5 @@
 const Category = require('../models/Category');
-const MenuItem = require('../models/MenuItem');
+const Product = require('../models/Product');
 const cloudinary = require('../config/cloudinary');
 
 // Helper: upload buffer to Cloudinary
@@ -88,13 +88,13 @@ exports.deleteCategory = async (req, res, next) => {
     }
 
     // Delete all menu items in this category (and their images)
-    const items = await MenuItem.find({ category: req.params.id });
+    const items = await Product.find({ category: req.params.id });
     for (const item of items) {
       if (item.image && item.image.publicId) {
         await cloudinary.uploader.destroy(item.image.publicId);
       }
     }
-    await MenuItem.deleteMany({ category: req.params.id });
+    await Product.deleteMany({ category: req.params.id });
 
     await category.deleteOne();
 

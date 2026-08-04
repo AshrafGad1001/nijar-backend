@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const menuItemSchema = new mongoose.Schema({
+const productSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -77,10 +77,10 @@ const menuItemSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-menuItemSchema.index({ category: 1, displayOrder: 1 });
-menuItemSchema.index({ isHeroSlide: 1 });
-menuItemSchema.index({ isBestSeller: 1 });
+productSchema.index({ category: 1, displayOrder: 1 });
+productSchema.index({ isHeroSlide: 1 });
+productSchema.index({ isBestSeller: 1 });
 
-const MenuItem = mongoose.model('MenuItem', menuItemSchema);
+const Product = mongoose.model('Product', productSchema);
 
-module.exports = MenuItem;
+module.exports = Product;

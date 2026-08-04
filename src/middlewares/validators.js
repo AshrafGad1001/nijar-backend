@@ -1,6 +1,6 @@
 const { body, validationResult } = require('express-validator');
 const Category = require('../models/Category');
-const MenuItem = require('../models/MenuItem');
+const Product = require('../models/Product');
 
 // Validation handler to check for errors
 const validate = (req, res, next) => {
@@ -31,7 +31,7 @@ const categoryValidator = [
   validate
 ];
 
-const menuItemValidator = [
+const productValidator = [
   body('name')
     .optional()
     .trim()
@@ -40,7 +40,7 @@ const menuItemValidator = [
     .isLength({ max: 100 }).withMessage('Name must be less than 100 characters')
     .custom(async (value, { req }) => {
       if (!value) return true;
-      const existing = await MenuItem.findOne({ name: value });
+      const existing = await Product.findOne({ name: value });
       if (existing && existing._id.toString() !== req.params.id) {
         throw new Error('اسم المنتج موجود بالفعل. يرجى اختيار اسم آخر.');
       }
@@ -90,5 +90,5 @@ const menuItemValidator = [
 
 module.exports = {
   categoryValidator,
-  menuItemValidator
+  productValidator
 };

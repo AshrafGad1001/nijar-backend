@@ -26,8 +26,8 @@ app.use(cors({
 // Mount routes
 app.use('/api/v1/auth', require('./src/routes/authRoutes'));
 app.use('/api/v1/categories', require('./src/routes/categoryRoutes'));
-app.use('/api/v1/items', require('./src/routes/menuItemRoutes'));
-app.use('/api/v1/menu', require('./src/routes/menuRoutes'));
+app.use('/api/v1/products', require('./src/routes/productRoutes'));
+app.use('/api/v1/catalog', require('./src/routes/catalogRoutes'));
 
 // Health check
 app.get('/api/v1/health', (req, res) => {

@@ -1,5 +1,5 @@
 const Category = require('../models/Category');
-const MenuItem = require('../models/MenuItem');
+const Product = require('../models/Product');
 
 exports.getFullMenu = async (req, res, next) => {
   try {
@@ -7,7 +7,7 @@ exports.getFullMenu = async (req, res, next) => {
     
     const menuData = await Promise.all(
       categories.map(async (cat) => {
-        const items = await MenuItem.find({ category: cat._id, isAvailable: true }).sort({ displayOrder: 1 });
+        const items = await Product.find({ category: cat._id, isAvailable: true }).sort({ displayOrder: 1 });
         return {
           _id: cat._id,
           name: cat.name,

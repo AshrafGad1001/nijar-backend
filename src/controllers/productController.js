@@ -1,4 +1,4 @@
-const MenuItem = require('../models/MenuItem');
+const Product = require('../models/Product');
 const Category = require('../models/Category');
 const cloudinary = require('../config/cloudinary');
 
@@ -27,11 +27,11 @@ const destroyFromCloudinary = async (publicId) => {
   }
 };
 
-exports.getMenuItems = async (req, res, next) => {
+exports.getProducts = async (req, res, next) => {
   try {
     const query = req.query.category ? { category: req.query.category } : {};
 
-    const items = await MenuItem.find(query)
+    const items = await Product.find(query)
       .sort({ displayOrder: 1 })
       .populate('category', 'name');
 
@@ -41,7 +41,7 @@ exports.getMenuItems = async (req, res, next) => {
   }
 };
 
-exports.createMenuItem = async (req, res, next) => {
+exports.createProduct = async (req, res, next) => {
   try {
     const { name, description, price, category, isAvailable } = req.body;
 
@@ -50,21 +50,21 @@ exports.createMenuItem = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Category not found' });
     }
 
-    const count = await MenuItem.countDocuments({ category });
+    const count = await Product.countDocuments({ category });
 
     let parsedHasSizes = req.body.hasSizes === 'true' || req.body.hasSizes === true;
     let parsedIsBestSeller = req.body.isBestSeller === 'true' || req.body.isBestSeller === true;
     let parsedIsHeroSlide = req.body.isHeroSlide === 'true' || req.body.isHeroSlide === true;
 
     if (parsedIsBestSeller) {
-      const bestSellerCount = await MenuItem.countDocuments({ isBestSeller: true });
+      const bestSellerCount = await Product.countDocuments({ isBestSeller: true });
       if (bestSellerCount >= 10) {
         return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر لقائمة الأبرز' });
       }
     }
 
     if (parsedIsHeroSlide) {
-      const heroSlideCount = await MenuItem.countDocuments({ isHeroSlide: true });
+      const heroSlideCount = await Product.countDocuments({ isHeroSlide: true });
       if (heroSlideCount >= 10) {
         return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر للعرض الرئيسي' });
       }
@@ -118,14 +118,14 @@ exports.createMenuItem = async (req, res, next) => {
       itemData.gallery = galleryUploads;
     }
 
-    const item = await MenuItem.create(itemData);
+    const item = await Product.create(itemData);
     res.status(201).json({ success: true, data: item });
   } catch (error) {
     next(error);
   }
 };
 
-exports.updateMenuItem = async (req, res, next) => {
+exports.updateProduct = async (req, res, next) => {
   try {
     if (req.body.category) {
       const categoryExists = await Category.findById(req.body.category);
@@ -134,7 +134,7 @@ exports.updateMenuItem = async (req, res, next) => {
       }
     }
 
-    const item = await MenuItem.findById(req.params.id);
+    const item = await Product.findById(req.params.id);
     if (!item) {
       return res.status(404).json({ success: false, message: 'Item not found' });
     }
@@ -143,7 +143,7 @@ exports.updateMenuItem = async (req, res, next) => {
     if (req.body.isBestSeller !== undefined) {
       const parsedIsBestSeller = req.body.isBestSeller === 'true' || req.body.isBestSeller === true;
       if (parsedIsBestSeller && !item.isBestSeller) {
-        const bestSellerCount = await MenuItem.countDocuments({ isBestSeller: true });
+        const bestSellerCount = await Product.countDocuments({ isBestSeller: true });
         if (bestSellerCount >= 10) {
           return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر لقائمة الأبرز' });
         }
@@ -155,7 +155,7 @@ exports.updateMenuItem = async (req, res, next) => {
     if (req.body.isHeroSlide !== undefined) {
       const parsedIsHeroSlide = req.body.isHeroSlide === 'true' || req.body.isHeroSlide === true;
       if (parsedIsHeroSlide && !item.isHeroSlide) {
-        const heroSlideCount = await MenuItem.countDocuments({ isHeroSlide: true });
+        const heroSlideCount = await Product.countDocuments({ isHeroSlide: true });
         if (heroSlideCount >= 10) {
           return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر للعرض الرئيسي' });
         }
@@ -218,7 +218,7 @@ exports.updateMenuItem = async (req, res, next) => {
       req.body.gallery = currentGallery.filter(img => !idsToRemove.includes(img.publicId));
     }
 
-    const updated = await MenuItem.findByIdAndUpdate(req.params.id, req.body, {
+    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
@@ -229,9 +229,9 @@ exports.updateMenuItem = async (req, res, next) => {
   }
 };
 
-exports.deleteMenuItem = async (req, res, next) => {
+exports.deleteProduct = async (req, res, next) => {
   try {
-    const item = await MenuItem.findById(req.params.id);
+    const item = await Product.findById(req.params.id);
     if (!item) {
       return res.status(404).json({ success: false, message: 'Item not found' });
     }
@@ -251,17 +251,17 @@ exports.deleteMenuItem = async (req, res, next) => {
   }
 };
 
-exports.reorderMenuItems = async (req, res, next) => {
+exports.reorderProducts = async (req, res, next) => {
   try {
     const { orderedIds } = req.body;
 
     await Promise.all(
       orderedIds.map((id, index) =>
-        MenuItem.findByIdAndUpdate(id, { displayOrder: index + 1 })
+        Product.findByIdAndUpdate(id, { displayOrder: index + 1 })
       )
     );
 
-    const items = await MenuItem.find({ _id: { $in: orderedIds } }).sort({ displayOrder: 1 });
+    const items = await Product.find({ _id: { $in: orderedIds } }).sort({ displayOrder: 1 });
     res.status(200).json({ success: true, data: items });
   } catch (error) {
     next(error);
@@ -270,7 +270,7 @@ exports.reorderMenuItems = async (req, res, next) => {
 
 exports.getBestSellers = async (req, res, next) => {
   try {
-    const items = await MenuItem.find({ isBestSeller: true })
+    const items = await Product.find({ isBestSeller: true })
       .populate('category', 'name');
     res.status(200).json({ success: true, count: items.length, data: items });
   } catch (error) {
@@ -280,7 +280,7 @@ exports.getBestSellers = async (req, res, next) => {
 
 exports.getHeroSlides = async (req, res, next) => {
   try {
-    const items = await MenuItem.find({ isHeroSlide: true, isAvailable: true })
+    const items = await Product.find({ isHeroSlide: true, isAvailable: true })
       .populate('category', 'name');
     res.status(200).json({ success: true, count: items.length, data: items });
   } catch (error) {
