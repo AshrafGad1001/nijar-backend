@@ -40,6 +40,17 @@ const menuItemSchema = new mongoose.Schema({
       default: '',
     },
   },
+  // Gallery: multiple additional images per piece
+  gallery: [{
+    url: {
+      type: String,
+      required: true,
+    },
+    publicId: {
+      type: String,
+      required: true,
+    },
+  }],
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
@@ -53,6 +64,10 @@ const menuItemSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  isHeroSlide: {
+    type: Boolean,
+    default: false,
+  },
   displayOrder: {
     type: Number,
     required: true,
@@ -63,6 +78,8 @@ const menuItemSchema = new mongoose.Schema({
 });
 
 menuItemSchema.index({ category: 1, displayOrder: 1 });
+menuItemSchema.index({ isHeroSlide: 1 });
+menuItemSchema.index({ isBestSeller: 1 });
 
 const MenuItem = mongoose.model('MenuItem', menuItemSchema);
 

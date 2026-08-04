@@ -1,7 +1,7 @@
 {
-  "name": "campcafe-backend",
+  "name": "nijar-backend",
   "version": "1.0.0",
-  "description": "Camp Cafe Restaurant Menu API",
+  "description": "Nijar Restaurant Menu API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

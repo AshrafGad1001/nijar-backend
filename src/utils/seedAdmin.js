@@ -10,7 +10,7 @@ const seedAdmin = async () => {
     const adminCount = await Admin.countDocuments();
     if (adminCount === 0) {
       await Admin.create({
-        email: 'admin@campcafe.com',
+        email: 'admin@nijar.com',
         password: 'admin123'
       });
       console.log('Admin user created successfully');

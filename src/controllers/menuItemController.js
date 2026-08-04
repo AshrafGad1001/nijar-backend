@@ -16,6 +16,17 @@ const uploadToCloudinary = (fileBuffer, folder) => {
   });
 };
 
+// Helper: delete image from Cloudinary safely
+const destroyFromCloudinary = async (publicId) => {
+  if (publicId) {
+    try {
+      await cloudinary.uploader.destroy(publicId);
+    } catch (err) {
+      console.error('Cloudinary destroy error:', err.message);
+    }
+  }
+};
+
 exports.getMenuItems = async (req, res, next) => {
   try {
     const query = req.query.category ? { category: req.query.category } : {};
@@ -43,16 +54,23 @@ exports.createMenuItem = async (req, res, next) => {
 
     let parsedHasSizes = req.body.hasSizes === 'true' || req.body.hasSizes === true;
     let parsedIsBestSeller = req.body.isBestSeller === 'true' || req.body.isBestSeller === true;
-    
+    let parsedIsHeroSlide = req.body.isHeroSlide === 'true' || req.body.isHeroSlide === true;
+
     if (parsedIsBestSeller) {
       const bestSellerCount = await MenuItem.countDocuments({ isBestSeller: true });
       if (bestSellerCount >= 10) {
-        return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر لقائمة الأكثر مبيعاً' });
+        return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر لقائمة الأبرز' });
       }
     }
-    
-    let parsedSizes = [];
 
+    if (parsedIsHeroSlide) {
+      const heroSlideCount = await MenuItem.countDocuments({ isHeroSlide: true });
+      if (heroSlideCount >= 10) {
+        return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر للعرض الرئيسي' });
+      }
+    }
+
+    let parsedSizes = [];
     if (parsedHasSizes) {
       if (req.body.sizes) {
         try {
@@ -75,15 +93,29 @@ exports.createMenuItem = async (req, res, next) => {
       category,
       isAvailable,
       isBestSeller: parsedIsBestSeller,
+      isHeroSlide: parsedIsHeroSlide,
       hasSizes: parsedHasSizes,
       sizes: parsedSizes,
       displayOrder: count + 1,
+      gallery: [],
     };
 
-    // Handle image upload if a file is provided
-    if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer, 'campcafe/items');
+    // Handle cover image upload
+    if (req.files && req.files.image && req.files.image[0]) {
+      const result = await uploadToCloudinary(req.files.image[0].buffer, 'nijar/items');
       itemData.image = result;
+    } else if (req.file) {
+      // fallback for single upload
+      const result = await uploadToCloudinary(req.file.buffer, 'nijar/items');
+      itemData.image = result;
+    }
+
+    // Handle gallery images upload
+    if (req.files && req.files.gallery && req.files.gallery.length > 0) {
+      const galleryUploads = await Promise.all(
+        req.files.gallery.map(f => uploadToCloudinary(f.buffer, 'nijar/gallery'))
+      );
+      itemData.gallery = galleryUploads;
     }
 
     const item = await MenuItem.create(itemData);
@@ -103,27 +135,39 @@ exports.updateMenuItem = async (req, res, next) => {
     }
 
     const item = await MenuItem.findById(req.params.id);
-
     if (!item) {
-      return res.status(404).json({ success: false, message: 'MenuItem not found' });
+      return res.status(404).json({ success: false, message: 'Item not found' });
     }
 
+    // Handle isBestSeller limit
     if (req.body.isBestSeller !== undefined) {
       const parsedIsBestSeller = req.body.isBestSeller === 'true' || req.body.isBestSeller === true;
       if (parsedIsBestSeller && !item.isBestSeller) {
         const bestSellerCount = await MenuItem.countDocuments({ isBestSeller: true });
         if (bestSellerCount >= 10) {
-          return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر لقائمة الأكثر مبيعاً' });
+          return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر لقائمة الأبرز' });
         }
       }
       req.body.isBestSeller = parsedIsBestSeller;
     }
 
-    let parsedHasSizes = req.body.hasSizes === 'true' || req.body.hasSizes === true;
-    let parsedSizes = [];
+    // Handle isHeroSlide limit
+    if (req.body.isHeroSlide !== undefined) {
+      const parsedIsHeroSlide = req.body.isHeroSlide === 'true' || req.body.isHeroSlide === true;
+      if (parsedIsHeroSlide && !item.isHeroSlide) {
+        const heroSlideCount = await MenuItem.countDocuments({ isHeroSlide: true });
+        if (heroSlideCount >= 10) {
+          return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر للعرض الرئيسي' });
+        }
+      }
+      req.body.isHeroSlide = parsedIsHeroSlide;
+    }
 
+    // Handle sizes/dimensions
+    let parsedHasSizes = req.body.hasSizes === 'true' || req.body.hasSizes === true;
     if (req.body.hasSizes !== undefined) {
       if (parsedHasSizes) {
+        let parsedSizes = [];
         if (req.body.sizes) {
           try {
             parsedSizes = typeof req.body.sizes === 'string' ? JSON.parse(req.body.sizes) : req.body.sizes;
@@ -136,23 +180,42 @@ exports.updateMenuItem = async (req, res, next) => {
           return res.status(400).json({ success: false, message: 'At least one valid size is required' });
         }
         req.body.sizes = validSizes;
+        req.body.price = null;
       } else {
         req.body.sizes = [];
       }
       req.body.hasSizes = parsedHasSizes;
-      if (parsedHasSizes) {
-        req.body.price = null;
-      }
     }
 
-    // Handle new image upload
-    if (req.file) {
-      // Delete old image from Cloudinary if it exists
-      if (item.image && item.image.publicId) {
-        await cloudinary.uploader.destroy(item.image.publicId);
-      }
-      const result = await uploadToCloudinary(req.file.buffer, 'campcafe/items');
+    // Handle cover image replacement
+    if (req.files && req.files.image && req.files.image[0]) {
+      await destroyFromCloudinary(item.image?.publicId);
+      const result = await uploadToCloudinary(req.files.image[0].buffer, 'nijar/items');
       req.body.image = result;
+    } else if (req.file) {
+      await destroyFromCloudinary(item.image?.publicId);
+      const result = await uploadToCloudinary(req.file.buffer, 'nijar/items');
+      req.body.image = result;
+    }
+
+    // Handle gallery: append new images to existing gallery
+    if (req.files && req.files.gallery && req.files.gallery.length > 0) {
+      const newGalleryImages = await Promise.all(
+        req.files.gallery.map(f => uploadToCloudinary(f.buffer, 'nijar/gallery'))
+      );
+      req.body.gallery = [...(item.gallery || []), ...newGalleryImages];
+    }
+
+    // Handle gallery image removal (pass publicIds to delete)
+    if (req.body.removeGalleryIds) {
+      const idsToRemove = typeof req.body.removeGalleryIds === 'string'
+        ? JSON.parse(req.body.removeGalleryIds)
+        : req.body.removeGalleryIds;
+
+      await Promise.all(idsToRemove.map(destroyFromCloudinary));
+
+      const currentGallery = req.body.gallery || item.gallery || [];
+      req.body.gallery = currentGallery.filter(img => !idsToRemove.includes(img.publicId));
     }
 
     const updated = await MenuItem.findByIdAndUpdate(req.params.id, req.body, {
@@ -169,18 +232,19 @@ exports.updateMenuItem = async (req, res, next) => {
 exports.deleteMenuItem = async (req, res, next) => {
   try {
     const item = await MenuItem.findById(req.params.id);
-
     if (!item) {
-      return res.status(404).json({ success: false, message: 'MenuItem not found' });
+      return res.status(404).json({ success: false, message: 'Item not found' });
     }
 
-    // Delete image from Cloudinary
-    if (item.image && item.image.publicId) {
-      await cloudinary.uploader.destroy(item.image.publicId);
+    // Delete cover image from Cloudinary
+    await destroyFromCloudinary(item.image?.publicId);
+
+    // Delete all gallery images from Cloudinary
+    if (item.gallery && item.gallery.length > 0) {
+      await Promise.all(item.gallery.map(img => destroyFromCloudinary(img.publicId)));
     }
 
     await item.deleteOne();
-
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
     next(error);
@@ -198,7 +262,6 @@ exports.reorderMenuItems = async (req, res, next) => {
     );
 
     const items = await MenuItem.find({ _id: { $in: orderedIds } }).sort({ displayOrder: 1 });
-
     res.status(200).json({ success: true, data: items });
   } catch (error) {
     next(error);
@@ -209,7 +272,16 @@ exports.getBestSellers = async (req, res, next) => {
   try {
     const items = await MenuItem.find({ isBestSeller: true })
       .populate('category', 'name');
+    res.status(200).json({ success: true, count: items.length, data: items });
+  } catch (error) {
+    next(error);
+  }
+};
 
+exports.getHeroSlides = async (req, res, next) => {
+  try {
+    const items = await MenuItem.find({ isHeroSlide: true, isAvailable: true })
+      .populate('category', 'name');
     res.status(200).json({ success: true, count: items.length, data: items });
   } catch (error) {
     next(error);

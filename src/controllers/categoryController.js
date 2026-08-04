@@ -34,7 +34,7 @@ exports.createCategory = async (req, res, next) => {
 
     // Handle image upload if a file is provided
     if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer, 'campcafe/categories');
+      const result = await uploadToCloudinary(req.file.buffer, 'nijar/categories');
       categoryData.image = result;
     }
 
@@ -59,7 +59,7 @@ exports.updateCategory = async (req, res, next) => {
       if (category.image && category.image.publicId) {
         await cloudinary.uploader.destroy(category.image.publicId);
       }
-      const result = await uploadToCloudinary(req.file.buffer, 'campcafe/categories');
+      const result = await uploadToCloudinary(req.file.buffer, 'nijar/categories');
       req.body.image = result;
     }
 

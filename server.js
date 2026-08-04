@@ -31,7 +31,7 @@ app.use('/api/v1/menu', require('./src/routes/menuRoutes'));
 
 // Health check
 app.get('/api/v1/health', (req, res) => {
-  res.json({ success: true, message: 'Camp Cafe API is running' });
+  res.json({ success: true, message: 'Nijar API is running' });
 });
 
 // Error handler (must be after routes)

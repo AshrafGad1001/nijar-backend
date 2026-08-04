@@ -10,6 +10,8 @@ const {
   updateMenuItem,
   deleteMenuItem,
   reorderMenuItems,
+  getBestSellers,
+  getHeroSlides,
 } = require('../controllers/menuItemController');
 
 // All routes are protected & rate-limited
@@ -18,16 +20,29 @@ router.use(adminLimiter);
 
 router.route('/')
   .get(getMenuItems)
-  .post(upload.single('image'), checkMagicBytes, menuItemValidator, createMenuItem);
+  .post(
+    upload.fields([{ name: 'image', maxCount: 1 }, { name: 'gallery', maxCount: 10 }]),
+    checkMagicBytes,
+    menuItemValidator,
+    createMenuItem
+  );
 
 router.route('/best-sellers')
-  .get(require('../controllers/menuItemController').getBestSellers);
+  .get(getBestSellers);
+
+router.route('/hero-slides')
+  .get(getHeroSlides);
 
 router.route('/reorder')
   .put(reorderMenuItems);
 
 router.route('/:id')
-  .put(upload.single('image'), checkMagicBytes, menuItemValidator, updateMenuItem)
+  .put(
+    upload.fields([{ name: 'image', maxCount: 1 }, { name: 'gallery', maxCount: 10 }]),
+    checkMagicBytes,
+    menuItemValidator,
+    updateMenuItem
+  )
   .delete(deleteMenuItem);
 
 module.exports = router;
