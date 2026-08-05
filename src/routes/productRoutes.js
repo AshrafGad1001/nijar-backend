@@ -14,7 +14,11 @@ const {
   getHeroSlides,
 } = require('../controllers/productController');
 
-// All routes are protected & rate-limited
+// Public routes
+router.route('/featured-works').get(getBestSellers);
+router.route('/hero-slides').get(getHeroSlides);
+
+// All routes below are protected & rate-limited
 router.use(protect);
 router.use(adminLimiter);
 
@@ -26,12 +30,6 @@ router.route('/')
     productValidator,
     createProduct
   );
-
-router.route('/featured-works')
-  .get(getBestSellers);
-
-router.route('/hero-slides')
-  .get(getHeroSlides);
 
 router.route('/reorder')
   .put(reorderProducts);
