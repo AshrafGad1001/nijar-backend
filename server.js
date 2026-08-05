@@ -28,6 +28,7 @@ app.use('/api/v1/auth', require('./src/routes/authRoutes'));
 app.use('/api/v1/categories', require('./src/routes/categoryRoutes'));
 app.use('/api/v1/products', require('./src/routes/productRoutes'));
 app.use('/api/v1/catalog', require('./src/routes/catalogRoutes'));
+app.use('/api/v1/settings', require('./src/routes/settingsRoutes'));
 
 // Health check
 app.get('/api/v1/health', (req, res) => {
