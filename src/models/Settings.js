@@ -28,6 +28,11 @@ const settingsSchema = new mongoose.Schema({
     trim: true,
     minlength: [10, 'رقم الواتساب قصير جداً'],
     maxlength: [20, 'رقم الواتساب طويل جداً']
+  },
+  mapUrl: {
+    type: String,
+    trim: true,
+    default: ''
   }
 }, {
   timestamps: true,
