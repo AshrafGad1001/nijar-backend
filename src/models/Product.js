@@ -30,15 +30,12 @@ const productSchema = new mongoose.Schema({
       type: Number,
       required: true,
     },
-    hardwareNote: {
-      type: String,
-      default: '',
-      trim: true,
-    },
-    materialNote: {
-      type: String,
-      default: '',
-      trim: true,
+    variantDetails: {
+      woodType: { type: String, default: '', trim: true },
+      paintType: { type: String, default: '', trim: true },
+      hardware: { type: String, default: '', trim: true },
+      material: { type: String, default: '', trim: true },
+      dimensions: { type: String, default: '', trim: true },
     }
   }],
   technicalDetails: {
