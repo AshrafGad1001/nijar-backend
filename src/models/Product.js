@@ -33,17 +33,31 @@ const productSchema = new mongoose.Schema({
     variantDetails: {
       woodType: { type: String, default: '', trim: true },
       paintType: { type: String, default: '', trim: true },
-      hardware: { type: String, default: '', trim: true },
-      material: { type: String, default: '', trim: true },
-      dimensions: { type: String, default: '', trim: true },
+      mechanism: { type: String, default: '', trim: true },
+      handles: { type: String, default: '', trim: true },
+      hinges: { type: String, default: '', trim: true },
+      warranty: { type: String, default: '', trim: true },
+      productionTime: { type: String, default: '', trim: true },
+      dimensions: {
+        length: { type: Number, default: null, min: 0 },
+        width: { type: Number, default: null, min: 0 },
+        height: { type: Number, default: null, min: 0 },
+      },
     }
   }],
   technicalDetails: {
     woodType: { type: String, default: '', trim: true },
     paintType: { type: String, default: '', trim: true },
+    mechanism: { type: String, default: '', trim: true },
+    handles: { type: String, default: '', trim: true },
+    hinges: { type: String, default: '', trim: true },
     warranty: { type: String, default: '', trim: true },
-    dimensions: { type: String, default: '', trim: true },
     productionTime: { type: String, default: '', trim: true },
+    dimensions: {
+      length: { type: Number, default: null, min: 0 },
+      width: { type: Number, default: null, min: 0 },
+      height: { type: Number, default: null, min: 0 },
+    },
   },
   image: {
     url: {
@@ -100,7 +114,6 @@ const productSchema = new mongoose.Schema({
 productSchema.index({ category: 1, displayOrder: 1 });
 productSchema.index({ isHeroSlide: 1 });
 productSchema.index({ isBestSeller: 1 });
-productSchema.index({ slug: 1 });
 
 const slugify = require('slugify');
 
