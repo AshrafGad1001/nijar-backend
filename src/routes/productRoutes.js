@@ -6,6 +6,7 @@ const { adminLimiter } = require('../middlewares/rateLimiter');
 const { upload, checkMagicBytes } = require('../middlewares/upload');
 const {
   getProducts,
+  getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -34,7 +35,15 @@ router.route('/')
 router.route('/reorder')
   .put(reorderProducts);
 
+router.route('/upload-image')
+  .post(
+    upload.single('file'),
+    checkMagicBytes,
+    require('../controllers/productController').uploadSingleImage
+  );
+
 router.route('/:id')
+  .get(getProductById)
   .put(
     upload.fields([{ name: 'image', maxCount: 1 }, { name: 'gallery', maxCount: 10 }]),
     checkMagicBytes,

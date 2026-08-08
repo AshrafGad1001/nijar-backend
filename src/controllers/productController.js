@@ -27,6 +27,19 @@ const destroyFromCloudinary = async (publicId) => {
   }
 };
 
+exports.uploadSingleImage = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file uploaded' });
+    }
+    const folder = req.body.folder || 'nijar/items';
+    const result = await uploadToCloudinary(req.file.buffer, folder);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getProducts = async (req, res, next) => {
   try {
     const query = req.query.category ? { category: req.query.category } : {};
@@ -37,6 +50,21 @@ exports.getProducts = async (req, res, next) => {
 
     res.status(200).json({ success: true, count: items.length, data: items });
   } catch (error) {
+    next(error);
+  }
+};
+
+exports.getProductById = async (req, res, next) => {
+  try {
+    const item = await Product.findById(req.params.id).populate('category', 'name');
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'المنتج غير موجود' });
+    }
+    res.status(200).json({ success: true, data: item });
+  } catch (error) {
+    if (error.kind === 'ObjectId') {
+      return res.status(404).json({ success: false, message: 'المنتج غير موجود' });
+    }
     next(error);
   }
 };
@@ -105,9 +133,10 @@ exports.createProduct = async (req, res, next) => {
       const result = await uploadToCloudinary(req.files.image[0].buffer, 'nijar/items');
       itemData.image = result;
     } else if (req.file) {
-      // fallback for single upload
       const result = await uploadToCloudinary(req.file.buffer, 'nijar/items');
       itemData.image = result;
+    } else if (req.body.image) {
+      itemData.image = typeof req.body.image === 'string' ? JSON.parse(req.body.image) : req.body.image;
     }
 
     // Handle gallery images upload
@@ -116,6 +145,8 @@ exports.createProduct = async (req, res, next) => {
         req.files.gallery.map(f => uploadToCloudinary(f.buffer, 'nijar/gallery'))
       );
       itemData.gallery = galleryUploads;
+    } else if (req.body.gallery) {
+      itemData.gallery = typeof req.body.gallery === 'string' ? JSON.parse(req.body.gallery) : req.body.gallery;
     }
 
     const item = await Product.create(itemData);
@@ -196,14 +227,35 @@ exports.updateProduct = async (req, res, next) => {
       await destroyFromCloudinary(item.image?.publicId);
       const result = await uploadToCloudinary(req.file.buffer, 'nijar/items');
       req.body.image = result;
+    } else if (req.body.image) {
+      const newImg = typeof req.body.image === 'string' ? JSON.parse(req.body.image) : req.body.image;
+      if (newImg.publicId && newImg.publicId !== item.image?.publicId) {
+        // Different image, we can safely replace
+        await destroyFromCloudinary(item.image?.publicId);
+        req.body.image = newImg;
+      }
     }
 
     // Handle gallery: append new images to existing gallery
+    let newGalleryImages = [];
     if (req.files && req.files.gallery && req.files.gallery.length > 0) {
-      const newGalleryImages = await Promise.all(
+      newGalleryImages = await Promise.all(
         req.files.gallery.map(f => uploadToCloudinary(f.buffer, 'nijar/gallery'))
       );
+    } else if (req.body.gallery) {
+      const parsedGallery = typeof req.body.gallery === 'string' ? JSON.parse(req.body.gallery) : req.body.gallery;
+      // We assume pre-uploaded gallery images sent in body are NEW images appended.
+      // If they are not objects with publicId, we ignore.
+      if (Array.isArray(parsedGallery)) {
+        newGalleryImages = parsedGallery.filter(img => img.url && img.publicId);
+      }
+    }
+    
+    if (newGalleryImages.length > 0) {
       req.body.gallery = [...(item.gallery || []), ...newGalleryImages];
+    } else {
+      // Keep existing if no new images appended, removal handled below
+      req.body.gallery = item.gallery || [];
     }
 
     // Handle gallery image removal (pass publicIds to delete)
@@ -218,10 +270,8 @@ exports.updateProduct = async (req, res, next) => {
       req.body.gallery = currentGallery.filter(img => !idsToRemove.includes(img.publicId));
     }
 
-    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    Object.assign(item, req.body);
+    const updated = await item.save();
 
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
