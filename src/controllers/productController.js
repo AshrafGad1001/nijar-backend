@@ -125,7 +125,23 @@ exports.createProduct = async (req, res, next) => {
       }
     }
 
+    let parsedComponents = [];
+    if (req.body.components) {
+      try {
+        const arr = typeof req.body.components === 'string'
+          ? JSON.parse(req.body.components)
+          : req.body.components;
+        if (Array.isArray(arr)) {
+          parsedComponents = [...new Set(arr.map(c => typeof c === 'string' ? c.trim() : '').filter(c => c.length > 0 && c.length <= 50))];
+          if (parsedComponents.length > 20) parsedComponents = parsedComponents.slice(0, 20);
+        }
+      } catch (e) {
+        return res.status(400).json({ success: false, message: 'Invalid components format' });
+      }
+    }
+
     const itemData = {
+      components: parsedComponents,
       productCode: productCode ? productCode.toUpperCase() : undefined,
       name,
       description,
@@ -249,6 +265,21 @@ exports.updateProduct = async (req, res, next) => {
           : req.body.technicalDetails;
       } catch (e) {
         return res.status(400).json({ success: false, message: 'Invalid technical details format' });
+      }
+    }
+
+    if (req.body.components !== undefined) {
+      try {
+        const arr = typeof req.body.components === 'string'
+          ? JSON.parse(req.body.components)
+          : req.body.components;
+        if (Array.isArray(arr)) {
+          let parsedComponents = [...new Set(arr.map(c => typeof c === 'string' ? c.trim() : '').filter(c => c.length > 0 && c.length <= 50))];
+          if (parsedComponents.length > 20) parsedComponents = parsedComponents.slice(0, 20);
+          req.body.components = parsedComponents;
+        }
+      } catch (e) {
+        return res.status(400).json({ success: false, message: 'Invalid components format' });
       }
     }
 

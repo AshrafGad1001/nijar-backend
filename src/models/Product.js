@@ -19,6 +19,22 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  components: {
+    type: [{
+      type: String,
+      trim: true,
+      maxlength: [50, 'طول المكون لا يجب أن يتجاوز 50 حرف'],
+    }],
+    validate: [
+      {
+        validator: function (val) {
+          return val.length <= 20;
+        },
+        message: 'لا يمكن إضافة أكثر من 20 مكون',
+      }
+    ],
+    default: []
+  },
   price: {
     type: Number,
     required: false,
