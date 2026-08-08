@@ -23,3 +23,28 @@ exports.getFullMenu = async (req, res, next) => {
     next(error);
   }
 };
+
+const mongoose = require('mongoose');
+
+exports.getProductBySlug = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    let item;
+    
+    if (mongoose.Types.ObjectId.isValid(slug)) {
+      item = await Product.findById(slug).populate('category', 'name');
+    }
+    
+    if (!item) {
+      item = await Product.findOne({ slug }).populate('category', 'name');
+    }
+
+    if (!item || !item.isAvailable) {
+      return res.status(404).json({ success: false, message: 'المنتج غير موجود' });
+    }
+
+    res.status(200).json({ success: true, data: item });
+  } catch (error) {
+    next(error);
+  }
+};

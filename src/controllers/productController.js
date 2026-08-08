@@ -71,7 +71,7 @@ exports.getProductById = async (req, res, next) => {
 
 exports.createProduct = async (req, res, next) => {
   try {
-    const { name, description, price, category, isAvailable } = req.body;
+    const { name, description, price, category, isAvailable, productCode } = req.body;
 
     const categoryExists = await Category.findById(category);
     if (!categoryExists) {
@@ -126,6 +126,7 @@ exports.createProduct = async (req, res, next) => {
     }
 
     const itemData = {
+      productCode: productCode ? productCode.toUpperCase() : undefined,
       name,
       description,
       price: parsedHasSizes ? null : price,
@@ -164,12 +165,23 @@ exports.createProduct = async (req, res, next) => {
     const item = await Product.create(itemData);
     res.status(201).json({ success: true, data: item });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, message: 'كود المنتج موجود بالفعل. يرجى إدخال كود فريد.' });
+    }
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ success: false, message: messages.join(', ') });
+    }
     next(error);
   }
 };
 
 exports.updateProduct = async (req, res, next) => {
   try {
+    if (req.body.productCode) {
+      req.body.productCode = req.body.productCode.toUpperCase();
+    }
+    
     if (req.body.category) {
       const categoryExists = await Category.findById(req.body.category);
       if (!categoryExists) {
@@ -297,6 +309,13 @@ exports.updateProduct = async (req, res, next) => {
 
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, message: 'كود المنتج موجود بالفعل. يرجى إدخال كود فريد.' });
+    }
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ success: false, message: messages.join(', ') });
+    }
     next(error);
   }
 };

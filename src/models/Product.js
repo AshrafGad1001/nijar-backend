@@ -2,6 +2,14 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
+  productCode: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    uppercase: true,
+    match: [/^[A-Z0-9\-]{3,15}$/, 'يجب أن يحتوي الكود على حروف وأرقام إنجليزية وعلامة ( - ) فقط، وبطول من 3 إلى 15 حرف'],
+  },
   name: {
     type: String,
     required: true,
