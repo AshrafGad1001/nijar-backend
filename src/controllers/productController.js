@@ -114,6 +114,17 @@ exports.createProduct = async (req, res, next) => {
       parsedSizes = validSizes;
     }
 
+    let parsedTechnicalDetails = {};
+    if (req.body.technicalDetails) {
+      try {
+        parsedTechnicalDetails = typeof req.body.technicalDetails === 'string'
+          ? JSON.parse(req.body.technicalDetails)
+          : req.body.technicalDetails;
+      } catch (e) {
+        return res.status(400).json({ success: false, message: 'Invalid technical details format' });
+      }
+    }
+
     const itemData = {
       name,
       description,
@@ -124,6 +135,7 @@ exports.createProduct = async (req, res, next) => {
       isHeroSlide: parsedIsHeroSlide,
       hasSizes: parsedHasSizes,
       sizes: parsedSizes,
+      technicalDetails: parsedTechnicalDetails,
       displayOrder: count + 1,
       gallery: [],
     };
@@ -216,6 +228,16 @@ exports.updateProduct = async (req, res, next) => {
         req.body.sizes = [];
       }
       req.body.hasSizes = parsedHasSizes;
+    }
+
+    if (req.body.technicalDetails) {
+      try {
+        req.body.technicalDetails = typeof req.body.technicalDetails === 'string'
+          ? JSON.parse(req.body.technicalDetails)
+          : req.body.technicalDetails;
+      } catch (e) {
+        return res.status(400).json({ success: false, message: 'Invalid technical details format' });
+      }
     }
 
     // Handle cover image replacement
