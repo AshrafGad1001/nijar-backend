@@ -125,8 +125,17 @@ exports.getCategoryProducts = async (req, res, next) => {
   try {
     const { slug } = req.params;
     const limit = parseInt(req.query.limit, 10);
+    const mongoose = require('mongoose');
 
-    const category = await Category.findOne({ slug });
+    let category;
+    if (mongoose.Types.ObjectId.isValid(slug)) {
+      category = await Category.findById(slug);
+    }
+    
+    if (!category) {
+      category = await Category.findOne({ slug });
+    }
+
     if (!category) {
       return res.status(404).json({ success: false, message: 'القسم غير موجود' });
     }

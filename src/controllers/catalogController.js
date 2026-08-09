@@ -11,6 +11,7 @@ exports.getFullMenu = async (req, res, next) => {
         return {
           _id: cat._id,
           name: cat.name,
+          slug: cat.slug,
           image: cat.image,
           displayOrder: cat.displayOrder,
           items: items
