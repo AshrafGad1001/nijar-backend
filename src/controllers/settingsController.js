@@ -52,7 +52,7 @@ exports.getSettings = async (req, res, next) => {
 
 exports.updateSettings = async (req, res, next) => {
   try {
-    const { adminName, address, phone, whatsapp, mapUrl } = req.body;
+    const { adminName, address, phone, whatsapp, mapUrl, aboutUsText } = req.body;
     
     // Fetch the existing settings to get the old image publicId if we need to delete it
     let settings = await Settings.findOne({});
@@ -76,6 +76,10 @@ exports.updateSettings = async (req, res, next) => {
       mapUrl,
       adminImage: imageObj
     };
+    
+    if (aboutUsText !== undefined) {
+      dataToUpdate.aboutUsText = aboutUsText;
+    }
 
     // Singleton Update: Upsert true ensures only ONE document exists
     const updatedSettings = await Settings.findOneAndUpdate(
