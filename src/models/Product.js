@@ -131,8 +131,16 @@ const productSchema = new mongoose.Schema({
     unique: true,
     sparse: true, // For existing docs that might not have it yet
   },
+  discountPercentage: {
+    type: Number,
+    min: [0, 'لا يمكن أن تكون نسبة الخصم بالسالب'],
+    max: [99, 'لا يمكن أن تتجاوز نسبة الخصم 99%'],
+    default: 0
+  }
 }, {
   timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 productSchema.index({ category: 1, displayOrder: 1 });
@@ -152,6 +160,24 @@ productSchema.pre('save', function (next) {
     this.slug = `${baseSlug}-${this._id.toString().slice(-5)}`;
   }
   next();
+});
+
+// Virtual for discounted price (base price)
+productSchema.virtual('discountedPrice').get(function() {
+  if (this.price && this.discountPercentage > 0) {
+    const discounted = this.price - (this.price * this.discountPercentage / 100);
+    return Math.round(discounted * 100) / 100;
+  }
+  return this.price;
+});
+
+// Virtual for saved amount (base price)
+productSchema.virtual('savedAmount').get(function() {
+  if (this.price && this.discountPercentage > 0) {
+    const saved = this.price * this.discountPercentage / 100;
+    return Math.round(saved * 100) / 100;
+  }
+  return 0;
 });
 
 const Product = mongoose.model('Product', productSchema);

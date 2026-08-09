@@ -6,13 +6,17 @@ const { adminLimiter } = require('../middlewares/rateLimiter');
 const { upload, checkMagicBytes } = require('../middlewares/upload');
 const {
   getCategories,
+  getCategoryProducts,
   createCategory,
   updateCategory,
   deleteCategory,
   reorderCategories,
 } = require('../controllers/categoryController');
 
-// All routes are protected & rate-limited
+// Public routes
+router.route('/:slug/products').get(getCategoryProducts);
+
+// All routes below are protected & rate-limited
 router.use(protect);
 router.use(adminLimiter);
 

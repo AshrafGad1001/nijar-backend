@@ -120,3 +120,36 @@ exports.reorderCategories = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getCategoryProducts = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const limit = parseInt(req.query.limit, 10);
+
+    const category = await Category.findOne({ slug });
+    if (!category) {
+      return res.status(404).json({ success: false, message: 'القسم غير موجود' });
+    }
+
+    let query = Product.find({ category: category._id, isAvailable: true }).sort({ displayOrder: 1 });
+    
+    if (limit && limit > 0) {
+      query = query.limit(limit);
+    }
+
+    const items = await query;
+
+    res.status(200).json({
+      success: true,
+      category: {
+        _id: category._id,
+        name: category.name,
+        image: category.image,
+        slug: category.slug
+      },
+      data: items
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -39,6 +39,24 @@ const settingsSchema = new mongoose.Schema({
     trim: true,
     maxlength: [600, 'النص طويل جداً، الحد الأقصى 600 حرف'],
     default: 'نحن في Nijar نجمع بين الأصالة والحداثة لنقدم لك أرقى المشغولات الخشبية. منذ تأسيسنا ونحن نصنع قطعاً فنية تعكس شغفنا من الخشب والجمال في تفاصيله. سواء كانت قطع أثاث رئيسية أو ديكورات خشبية دقيقة، نستخدم أفضل أنواع الأخشاب لضمان متانة وجودة تعيش معك طويلاً.'
+  },
+  facebookUrl: {
+    type: String,
+    trim: true,
+    default: '',
+    match: [/^https?:\/\/.+/, 'يرجى إدخال رابط صحيح يبدأ بـ http:// أو https://']
+  },
+  instagramUrl: {
+    type: String,
+    trim: true,
+    default: '',
+    match: [/^https?:\/\/.+/, 'يرجى إدخال رابط صحيح يبدأ بـ http:// أو https://']
+  },
+  tiktokUrl: {
+    type: String,
+    trim: true,
+    default: '',
+    match: [/^https?:\/\/.+/, 'يرجى إدخال رابط صحيح يبدأ بـ http:// أو https://']
   }
 }, {
   timestamps: true,

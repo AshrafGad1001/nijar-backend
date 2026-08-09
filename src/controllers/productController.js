@@ -71,7 +71,7 @@ exports.getProductById = async (req, res, next) => {
 
 exports.createProduct = async (req, res, next) => {
   try {
-    const { name, description, price, category, isAvailable, productCode } = req.body;
+    const { name, description, price, category, isAvailable, productCode, discountPercentage } = req.body;
 
     const categoryExists = await Category.findById(category);
     if (!categoryExists) {
@@ -146,6 +146,7 @@ exports.createProduct = async (req, res, next) => {
       name,
       description,
       price: parsedHasSizes ? null : price,
+      discountPercentage: discountPercentage ? Number(discountPercentage) : 0,
       category,
       isAvailable,
       isBestSeller: parsedIsBestSeller,
@@ -232,6 +233,10 @@ exports.updateProduct = async (req, res, next) => {
         }
       }
       req.body.isHeroSlide = parsedIsHeroSlide;
+    }
+
+    if (req.body.discountPercentage !== undefined) {
+      req.body.discountPercentage = Number(req.body.discountPercentage) || 0;
     }
 
     // Handle sizes/dimensions

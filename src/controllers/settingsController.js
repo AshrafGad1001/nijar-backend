@@ -32,7 +32,10 @@ const defaultSettings = {
   address: 'القاهرة، مصر (العنوان التفصيلي قريباً)',
   phone: '+20 000 000 0000',
   whatsapp: '+20 000 000 0000',
-  mapUrl: ''
+  mapUrl: '',
+  facebookUrl: '',
+  instagramUrl: '',
+  tiktokUrl: ''
 };
 
 exports.getSettings = async (req, res, next) => {
@@ -52,7 +55,7 @@ exports.getSettings = async (req, res, next) => {
 
 exports.updateSettings = async (req, res, next) => {
   try {
-    const { adminName, address, phone, whatsapp, mapUrl, aboutUsText } = req.body;
+    const { adminName, address, phone, whatsapp, mapUrl, aboutUsText, facebookUrl, instagramUrl, tiktokUrl } = req.body;
     
     // Fetch the existing settings to get the old image publicId if we need to delete it
     let settings = await Settings.findOne({});
@@ -74,6 +77,9 @@ exports.updateSettings = async (req, res, next) => {
       phone,
       whatsapp,
       mapUrl,
+      facebookUrl,
+      instagramUrl,
+      tiktokUrl,
       adminImage: imageObj
     };
     

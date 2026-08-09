@@ -22,11 +22,30 @@ const categorySchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  slug: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
 }, {
   timestamps: true,
 });
 
 categorySchema.index({ displayOrder: 1 });
+
+const slugify = require('slugify');
+
+categorySchema.pre('save', function (next) {
+  if (this.isModified('name') || !this.slug) {
+    const baseSlug = slugify(this.name, {
+      lower: true,
+      strict: true,
+      trim: true
+    });
+    this.slug = `${baseSlug}-${this._id.toString().slice(-5)}`;
+  }
+  next();
+});
 
 const Category = mongoose.model('Category', categorySchema);
 
