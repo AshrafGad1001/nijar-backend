@@ -14,6 +14,7 @@ exports.getFullMenu = async (req, res, next) => {
           slug: cat.slug,
           image: cat.image,
           displayOrder: cat.displayOrder,
+          isStandalonePiece: cat.isStandalonePiece,
           items: items
         };
       })

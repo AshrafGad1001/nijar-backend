@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const Bundle = require('../models/Bundle');
 const cloudinary = require('../config/cloudinary');
 
 // Helper: upload buffer to Cloudinary
@@ -343,6 +344,14 @@ exports.updateProduct = async (req, res, next) => {
     Object.assign(item, req.body);
     const updated = await item.save();
 
+    // Trigger bundle update if product is no longer available
+    if (updated.isAvailable === false) {
+      await Bundle.updateMany(
+        { products: updated._id, isAvailable: true },
+        { $set: { isAvailable: false } }
+      );
+    }
+
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
     if (error.code === 11000) {
@@ -370,6 +379,12 @@ exports.deleteProduct = async (req, res, next) => {
     if (item.gallery && item.gallery.length > 0) {
       await Promise.all(item.gallery.map(img => destroyFromCloudinary(img.publicId)));
     }
+
+    // Disable bundles containing this product
+    await Bundle.updateMany(
+      { products: item._id, isAvailable: true },
+      { $set: { isAvailable: false } }
+    );
 
     await item.deleteOne();
     res.status(200).json({ success: true, data: {} });

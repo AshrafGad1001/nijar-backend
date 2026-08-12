@@ -27,10 +27,10 @@ exports.getCategories = async (req, res, next) => {
 
 exports.createCategory = async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name, isStandalonePiece } = req.body;
     const count = await Category.countDocuments();
 
-    const categoryData = { name, displayOrder: count + 1 };
+    const categoryData = { name, isStandalonePiece: isStandalonePiece === 'true' || isStandalonePiece === true, displayOrder: count + 1 };
 
     // Handle image upload if a file is provided
     if (req.file) {

@@ -22,6 +22,10 @@ const categorySchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  isStandalonePiece: {
+    type: Boolean,
+    default: false,
+  },
   slug: {
     type: String,
     unique: true,
