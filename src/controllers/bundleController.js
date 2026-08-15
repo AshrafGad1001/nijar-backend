@@ -1,5 +1,6 @@
 const Bundle = require('../models/Bundle');
 const Product = require('../models/Product');
+const { triggerFrontendRevalidate } = require('../utils/revalidate');
 
 // @desc    Create new bundle
 // @route   POST /api/v1/bundles
@@ -26,6 +27,9 @@ exports.createBundle = async (req, res, next) => {
       isAvailable: isAvailable !== undefined ? isAvailable : true,
       displayOrder: displayOrder || 0
     });
+
+    triggerFrontendRevalidate('bundles');
+    triggerFrontendRevalidate('catalog');
 
     res.status(201).json({ success: true, data: bundle });
   } catch (error) {
@@ -65,6 +69,9 @@ exports.updateBundle = async (req, res, next) => {
 
     await bundle.save();
 
+    triggerFrontendRevalidate('bundles');
+    triggerFrontendRevalidate('catalog');
+
     res.status(200).json({ success: true, data: bundle });
   } catch (error) {
     next(error);
@@ -82,6 +89,10 @@ exports.deleteBundle = async (req, res, next) => {
     }
 
     await bundle.deleteOne();
+    
+    triggerFrontendRevalidate('bundles');
+    triggerFrontendRevalidate('catalog');
+    
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
     next(error);

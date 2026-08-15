@@ -1,6 +1,7 @@
 const Category = require('../models/Category');
 const Product = require('../models/Product');
 const cloudinary = require('../config/cloudinary');
+const { triggerFrontendRevalidate } = require('../utils/revalidate');
 
 // Helper: upload buffer to Cloudinary
 const uploadToCloudinary = (fileBuffer, folder) => {
@@ -39,6 +40,9 @@ exports.createCategory = async (req, res, next) => {
     }
 
     const category = await Category.create(categoryData);
+    
+    triggerFrontendRevalidate('catalog');
+    
     res.status(201).json({ success: true, data: category });
   } catch (error) {
     next(error);
@@ -67,6 +71,8 @@ exports.updateCategory = async (req, res, next) => {
       new: true,
       runValidators: true,
     });
+
+    triggerFrontendRevalidate('catalog');
 
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
@@ -98,6 +104,8 @@ exports.deleteCategory = async (req, res, next) => {
 
     await category.deleteOne();
 
+    triggerFrontendRevalidate('catalog');
+
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
     next(error);
@@ -115,6 +123,9 @@ exports.reorderCategories = async (req, res, next) => {
     );
 
     const categories = await Category.find().sort({ displayOrder: 1 });
+    
+    triggerFrontendRevalidate('catalog');
+    
     res.status(200).json({ success: true, data: categories });
   } catch (error) {
     next(error);

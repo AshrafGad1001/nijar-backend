@@ -1,5 +1,6 @@
 const Settings = require('../models/Settings');
 const cloudinary = require('../config/cloudinary');
+const { triggerFrontendRevalidate } = require('../utils/revalidate');
 
 // Helper: upload buffer to Cloudinary
 const uploadToCloudinary = (fileBuffer, folder) => {
@@ -98,6 +99,9 @@ exports.updateSettings = async (req, res, next) => {
         setDefaultsOnInsert: true
       }
     );
+
+    triggerFrontendRevalidate('settings');
+    triggerFrontendRevalidate('catalog'); // Revalidate catalog since settings include footer/navbar
 
     res.status(200).json({ success: true, data: updatedSettings });
   } catch (error) {

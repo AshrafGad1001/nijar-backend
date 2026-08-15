@@ -2,6 +2,7 @@ const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Bundle = require('../models/Bundle');
 const cloudinary = require('../config/cloudinary');
+const { triggerFrontendRevalidate } = require('../utils/revalidate');
 
 // Helper: upload buffer to Cloudinary
 const uploadToCloudinary = (fileBuffer, folder) => {
@@ -181,6 +182,10 @@ exports.createProduct = async (req, res, next) => {
     }
 
     const item = await Product.create(itemData);
+    
+    triggerFrontendRevalidate('catalog');
+    if (parsedIsHeroSlide) triggerFrontendRevalidate('hero-slides');
+    
     res.status(201).json({ success: true, data: item });
   } catch (error) {
     if (error.code === 11000) {
@@ -352,6 +357,9 @@ exports.updateProduct = async (req, res, next) => {
       );
     }
 
+    triggerFrontendRevalidate('catalog');
+    triggerFrontendRevalidate('hero-slides');
+
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
     if (error.code === 11000) {
@@ -387,6 +395,10 @@ exports.deleteProduct = async (req, res, next) => {
     );
 
     await item.deleteOne();
+    
+    triggerFrontendRevalidate('catalog');
+    triggerFrontendRevalidate('hero-slides');
+    
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
     next(error);
@@ -404,6 +416,10 @@ exports.reorderProducts = async (req, res, next) => {
     );
 
     const items = await Product.find({ _id: { $in: orderedIds } }).sort({ displayOrder: 1 });
+    
+    triggerFrontendRevalidate('catalog');
+    triggerFrontendRevalidate('hero-slides');
+    
     res.status(200).json({ success: true, data: items });
   } catch (error) {
     next(error);
