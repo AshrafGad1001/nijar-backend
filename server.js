@@ -8,7 +8,9 @@ const errorHandler = require('./src/middlewares/errorHandler');
 dotenv.config();
 
 // Connect to database
-connectDB();
+connectDB().catch(err => {
+  console.error("FATAL ERROR: Failed to connect to MongoDB", err);
+});
 
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
