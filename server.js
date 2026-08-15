@@ -11,14 +11,35 @@ dotenv.config();
 connectDB();
 
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const hpp = require('hpp');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 app.set('trust proxy', 1);
+
+// Set security headers
+app.use(helmet());
+
+// Rate limiting (100 requests per 10 mins)
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000, 
+  max: 100,
+  message: 'Too many requests from this IP, please try again in 10 minutes'
+});
+app.use('/api', limiter);
 
 // Body parser
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Sanitize data (prevent NoSQL injection)
+app.use(mongoSanitize());
+
+// Prevent HTTP param pollution
+app.use(hpp());
 
 // Enable CORS
 const allowedOrigins = process.env.CLIENT_URL 
