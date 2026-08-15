@@ -25,8 +25,24 @@ exports.login = async (req, res, next) => {
       expiresIn: process.env.JWT_EXPIRE || '30d'
     });
 
-    res.status(200).json({ success: true, token });
+    // Parse the expiresIn value to days if possible, or default to 30 days
+    const expireDays = parseInt(process.env.JWT_EXPIRE) || 30;
+    const cookieOptions = {
+      expires: new Date(Date.now() + expireDays * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    };
+
+    res.status(200).cookie('token', token, cookieOptions).json({ success: true, token });
   } catch (error) {
     next(error);
   }
+};
+
+exports.logout = async (req, res, next) => {
+  res.status(200).cookie('token', 'none', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true
+  }).json({ success: true, message: 'Logged out successfully' });
 };
