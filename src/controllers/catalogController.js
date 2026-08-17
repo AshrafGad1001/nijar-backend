@@ -15,6 +15,7 @@ exports.getFullMenu = async (req, res, next) => {
           image: cat.image,
           displayOrder: cat.displayOrder,
           isStandalonePiece: cat.isStandalonePiece,
+          hidePrices: cat.hidePrices,
           items: items
         };
       })
@@ -34,11 +35,11 @@ exports.getProductBySlug = async (req, res, next) => {
     let item;
     
     if (mongoose.Types.ObjectId.isValid(slug)) {
-      item = await Product.findById(slug).populate('category', 'name');
+      item = await Product.findById(slug).populate('category', 'name hidePrices');
     }
     
     if (!item) {
-      item = await Product.findOne({ slug }).populate('category', 'name');
+      item = await Product.findOne({ slug }).populate('category', 'name hidePrices');
     }
 
     if (!item || !item.isAvailable) {

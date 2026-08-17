@@ -28,10 +28,15 @@ exports.getCategories = async (req, res, next) => {
 
 exports.createCategory = async (req, res, next) => {
   try {
-    const { name, isStandalonePiece } = req.body;
+    const { name, isStandalonePiece, hidePrices } = req.body;
     const count = await Category.countDocuments();
 
-    const categoryData = { name, isStandalonePiece: isStandalonePiece === 'true' || isStandalonePiece === true, displayOrder: count + 1 };
+    const categoryData = { 
+      name, 
+      isStandalonePiece: isStandalonePiece === 'true' || isStandalonePiece === true, 
+      hidePrices: hidePrices === 'true' || hidePrices === true,
+      displayOrder: count + 1 
+    };
 
     // Handle image upload if a file is provided
     if (req.file) {
@@ -55,6 +60,14 @@ exports.updateCategory = async (req, res, next) => {
 
     if (!category) {
       return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+
+    if (req.body.isStandalonePiece !== undefined) {
+      req.body.isStandalonePiece = req.body.isStandalonePiece === 'true' || req.body.isStandalonePiece === true;
+    }
+    
+    if (req.body.hidePrices !== undefined) {
+      req.body.hidePrices = req.body.hidePrices === 'true' || req.body.hidePrices === true;
     }
 
     // Handle new image upload
@@ -165,7 +178,8 @@ exports.getCategoryProducts = async (req, res, next) => {
         _id: category._id,
         name: category.name,
         image: category.image,
-        slug: category.slug
+        slug: category.slug,
+        hidePrices: category.hidePrices
       },
       data: items
     });
