@@ -439,7 +439,7 @@ exports.getBestSellers = async (req, res, next) => {
 exports.getHeroSlides = async (req, res, next) => {
   try {
     const items = await Product.find({ isHeroSlide: true, isAvailable: true })
-      .populate('category', 'name');
+      .populate('category', 'name hidePrices');
     res.status(200).json({ success: true, count: items.length, data: items });
   } catch (error) {
     next(error);
