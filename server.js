@@ -7,11 +7,6 @@ const errorHandler = require('./src/middlewares/errorHandler');
 // Load env vars
 dotenv.config();
 
-// Connect to database
-connectDB().catch(err => {
-  console.error("FATAL ERROR: Failed to connect to MongoDB", err);
-});
-
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -20,6 +15,16 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 app.set('trust proxy', 1);
+
+// In serverless environments (Vercel), we must ensure DB connection is awaited on every request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Database connection failed' });
+  }
+});
 
 // Set security headers
 app.use(helmet());
